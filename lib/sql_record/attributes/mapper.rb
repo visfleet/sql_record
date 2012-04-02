@@ -57,7 +57,11 @@ module SQLRecord
 
         define_method attribute_name do
           return YAML.load(@raw_attributes[attribute_name.to_s]) if klass.serialized_attributes.has_key?(source_attribute)
-          klass.columns_hash[source_attribute].type_cast(@raw_attributes[attribute_name.to_s])
+          val = klass.columns_hash[source_attribute].type_cast(@raw_attributes[attribute_name.to_s])
+          # Adjust UTC times to localtime
+          val = val.localtime if val.is_a?(Time)
+
+          return val
         end
 
         # bit mucky, a lot here that feels like it should be a little method of its own
