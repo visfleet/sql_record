@@ -59,14 +59,9 @@ module SQLRecord
           return YAML.load(@raw_attributes[attribute_name.to_s]) if klass.serialized_attributes.has_key?(source_attribute)
           val = klass.columns_hash[source_attribute].type_cast(@raw_attributes[attribute_name.to_s])
 
-          if val.is_a?(Time)
-            if Time.respond_to?(:zone) && Time.zone.respond_to?(:utc_offset)
-              # Adjust UTC times to rails timezone
-              val.localtime(Time.zone.utc_offset)
-            else
-              # Adjust UTC times to localtime
-              val.localtime
-            end
+          if val.is_a?(Time) && Time.respond_to?(:zone) && Time.zone.respond_to?(:utc_offset)
+            # Adjust UTC times to rails timezone
+            val.localtime(Time.zone.utc_offset)
           end
 
           return val
