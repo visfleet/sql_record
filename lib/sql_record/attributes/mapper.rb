@@ -56,8 +56,12 @@ module SQLRecord
         source_attribute = (opts[:from] || attribute_name).to_s
 
         define_method attribute_name do
-          return YAML.load(@raw_attributes[attribute_name.to_s]) if klass.serialized_attributes.has_key?(source_attribute)
-          val = klass.columns_hash[source_attribute].type_cast(@raw_attributes[attribute_name.to_s])
+          serialized_attrib_names = klass.columns.select {|c| c.cast_type.is_a?(ActiveRecord::Type::Serialized) }.map {|c| c.name.to_s }
+          if serialized_attrib_names.include?(source_attribute.to_s)
+            return YAML.load(@raw_attributes[attribute_name.to_s])
+          end
+
+          val = klass.columns_hash[source_attribute].type_cast_from_database(@raw_attributes[attribute_name.to_s])
 
           if val.is_a?(Time) && Time.respond_to?(:zone) && Time.zone.respond_to?(:utc_offset)
             # Adjust UTC times to rails timezone
